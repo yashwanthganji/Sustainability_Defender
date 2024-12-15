@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sustainability Defender</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #eaf7ea;
+        }
+        canvas {
+            display: block;
+            margin: 20px auto;
+            border: 2px solid #4CAF50;
+            background-color: #fff;
+        }
+        #info {
+            margin-top: 20px;
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>Sustainability Defender</h1>
+    <p>Protect the youth and save the planet! Collect green energy while avoiding pollution.</p>
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+    <div id="info">
+        <p>Score: <span id="score">0</span></p>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        // Game settings
+        const player = { x: 50, y: 175, width: 50, height: 50, color: "#4CAF50", speed: 10 };
+        const obstacles = [];
+        const collectibles = [];
+        const gameSpeed = 5;
+        let score = 0;
+        let gameOver = false;
+
+        function createObstacle() {
+            const height = Math.random() * (canvas.height / 2);
+            obstacles.push({ x: canvas.width, y: 0, width: 50, height, color: "#FF0000" });
+            obstacles.push({
+                x: canvas.width,
+                y: height + 150,
+                width: 50,
+                height: canvas.height - (height + 150),
+                color: "#FF0000",
+            });
+        }
+
+        function createCollectible() {
+            const y = Math.random() * (canvas.height - 30);
+            collectibles.push({ x: canvas.width, y, width: 30, height: 30, color: "#00FF00" });
+        }
+
+        function update() {
+            if (gameOver) return;
+
+            // Move obstacles
+            for (const obstacle of obstacles) {
+                obstacle.x -= gameSpeed;
+            }
+
+            // Move collectibles
+            for (const collectible of collectibles) {
+                collectible.x -= gameSpeed;
+            }
+
+            // Remove off-screen obstacles and collectibles
+            obstacles.filter((obstacle) => obstacle.x + obstacle.width > 0);
+            collectibles.filter((collectible) => collectible.x + collectible.width > 0);
+
+            // Collision detection
+            for (const obstacle of obstacles) {
+                if (
+                    player.x < obstacle.x + obstacle.width &&
+                    player.x + player.width > obstacle.x &&
+                    player.y < obstacle.y + obstacle.height &&
+                    player.y + player.height > obstacle.y
+                ) {
+                    gameOver = true;
+                    alert("Game Over! Final Score: " + score);
+                    window.location.reload();
+                }
+            }
+
+            for (let i = collectibles.length - 1; i >= 0; i--) {
+                const collectible = collectibles[i];
+                if (
+                    player.x < collectible.x + collectible.width &&
+                    player.x + player.width > collectible.x &&
+                    player.y < collectible.y + collectible.height &&
+                    player.y + player.height > collectible.y
+                ) {
+                    score += 10;
+                    collectibles.splice(i, 1);
+                }
+            }
+
+            // Update score
+            document.getElementById("score").innerText = score;
+        }
+
+        function draw() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw player
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+
+            // Draw obstacles
+            for (const obstacle of obstacles) {
+                ctx.fillStyle = obstacle.color;
+                ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+            }
+
+            // Draw collectibles
+            for (const collectible of collectibles) {
+                ctx.fillStyle = collectible.color;
+                ctx.fillRect(collectible.x, collectible.y, collectible.width, collectible.height);
+            }
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            if (!gameOver) requestAnimationFrame(gameLoop);
+        }
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "ArrowUp" && player.y > 0) player.y -= player.speed;
+            if (e.key === "ArrowDown" && player.y + player.height < canvas.height) player.y += player.speed;
+        });
+
+        setInterval(createObstacle, 2000);
+        setInterval(createCollectible, 3000);
+
+        gameLoop();
+    </script>
+</body>
+</html>
